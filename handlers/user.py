@@ -1,43 +1,20 @@
-from aiogram import Router, types
-from db import users, messages
-from keyboards.inline import reply_keyboard
-from config import ADMIN_IDS
-from services.spam import is_spam
+msg = await messages.insert_one({
+    "user_id": message.from_user.id,
+    "text": message.text,
+    "timestamp": message.date.timestamp()
+})
 
-router = Router()
+msg_id = str(msg.inserted_id)
 
-@router.message()
-async def handle_user(message: types.Message):
-    if message.from_user.id in ADMIN_IDS:
-        return
-
-    user_id = message.from_user.id
-
-    # Anti-spam
-    if is_spam(user_id):
-        await message.answer("🚫 Too many messages. Slow down.")
-        return
-
-    # Save user
-    await users.update_one(
-        {"user_id": user_id},
-        {"$set": {"user_id": user_id}},
-        upsert=True
+for admin in ADMIN_IDS:
+    sent = await message.bot.forward_message(
+        chat_id=admin,
+        from_chat_id=message.chat.id,
+        message_id=message.message_id
     )
 
-    # Save message
-    msg = await messages.insert_one({
-        "user_id": user_id,
-        "text": message.text,
-        "timestamp": message.date.timestamp()
-    })
-
-    msg_id = str(msg.inserted_id)
-
-    # Send to admins
-    for admin in ADMIN_IDS:
-        await message.bot.send_message(
-            admin,
-            f"📩 New Message\nUser: {user_id}\n\n{message.text}",
-            reply_markup=reply_keyboard(msg_id)
-        )
+    # Save mapping
+    await messages.update_one(
+        {"_id": msg.inserted_id},
+        {"$set": {"admin_msg_id": sent.message_id}}
+    )
