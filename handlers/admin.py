@@ -1,3 +1,9 @@
+from aiogram import Router, types
+from db import messages
+from config import ADMIN_IDS
+
+router = Router()
+
 @router.message()
 async def reply_handler(message: types.Message):
     if message.from_user.id not in ADMIN_IDS:
