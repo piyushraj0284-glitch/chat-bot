@@ -3,42 +3,44 @@ from config import ADMIN_IDS
 
 router = Router()
 
+def extract_user_id(text: str):
+    try:
+        for line in text.split("\n"):
+            if "USER_ID:" in line:
+                return int(line.split("USER_ID:")[1].split()[0])
+    except:
+        return None
+
 @router.message()
 async def admin_reply(message: types.Message):
-    # Only admin
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    # Must reply
     if not message.reply_to_message:
         return
 
-    original = message.reply_to_message.text
+    # 🔥 Try both places
+    original_text = (
+        message.reply_to_message.text
+        or message.reply_to_message.caption
+        or ""
+    )
 
-    if not original:
-        await message.answer("❌ Cannot detect user")
+    # ALSO check replied message inside forwarded/replied
+    if not original_text and message.reply_to_message.reply_to_message:
+        original_text = message.reply_to_message.reply_to_message.text or ""
+
+    user_id = extract_user_id(original_text)
+
+    if not user_id:
+        await message.answer("❌ Reply to correct user message")
         return
 
-    # Extract user_id
     try:
-        first_line = original.split("\n")[0]
-        user_id = int(first_line.replace("USER_ID:", "").strip())
-    except:
-        await message.answer("❌ Invalid reply")
-        return
-
-    try:
-        # Send reply
-        if message.text:
-            await message.bot.send_message(
-                user_id,
-                f"💬 Admin:\n{message.text}"
-            )
-        else:
-            await message.answer("⚠️ Only text supported in this version")
-            return
-
+        await message.bot.send_message(
+            user_id,
+            f"💬 Admin:\n{message.text}"
+        )
         await message.answer("✅ Sent")
-
     except Exception as e:
         await message.answer(f"❌ Error: {e}")
