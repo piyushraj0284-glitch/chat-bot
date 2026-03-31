@@ -1,5 +1,5 @@
 from aiogram import Router, types
-from db import users, messages
+from db import users
 from config import ADMIN_IDS
 
 router = Router()
@@ -22,28 +22,17 @@ async def handle_user(message: types.Message):
         upsert=True
     )
 
-    # Save message
-    msg = await messages.insert_one({
-        "user_id": user.id,
-        "text": message.text,
-        "timestamp": message.date.timestamp()
-    })
+    # Create header with hidden ID
+    header = (
+        f"📩 New Message\n\n"
+        f"👤 {user.full_name}\n"
+        f"🔗 @{user.username if user.username else 'no_username'}\n"
+        f"🆔 {user.id}\n\n"
+    )
 
-    # Forward to admin
+    # Send to admins
     for admin in ADMIN_IDS:
-        sent = await message.bot.forward_message(
-            chat_id=admin,
-            from_chat_id=message.chat.id,
-            message_id=message.message_id
-        )
-
-        # 🔥 Save BOTH ids (important)
-        await messages.update_one(
-            {"_id": msg.inserted_id},
-            {
-                "$set": {
-                    "admin_msg_id": sent.message_id,
-                    "user_msg_id": message.message_id
-                }
-            }
+        await message.bot.send_message(
+            admin,
+            header + (message.text or "📎 Media message"),
         )
