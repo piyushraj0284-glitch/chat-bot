@@ -9,21 +9,27 @@ async def handle_user(message: types.Message):
     if message.from_user.id in ADMIN_IDS:
         return
 
+    user = message.from_user
+
     # Save user
     await users.update_one(
-        {"user_id": message.from_user.id},
-        {"$set": {"user_id": message.from_user.id}},
+        {"user_id": user.id},
+        {"$set": {
+            "user_id": user.id,
+            "name": user.full_name,
+            "username": user.username
+        }},
         upsert=True
     )
 
     # Save message
     msg = await messages.insert_one({
-        "user_id": message.from_user.id,
+        "user_id": user.id,
         "text": message.text,
         "timestamp": message.date.timestamp()
     })
 
-    # Forward message to admin
+    # Forward to admin
     for admin in ADMIN_IDS:
         sent = await message.bot.forward_message(
             chat_id=admin,
@@ -31,8 +37,13 @@ async def handle_user(message: types.Message):
             message_id=message.message_id
         )
 
-        # Save mapping
+        # 🔥 Save BOTH ids (important)
         await messages.update_one(
             {"_id": msg.inserted_id},
-            {"$set": {"admin_msg_id": sent.message_id}}
+            {
+                "$set": {
+                    "admin_msg_id": sent.message_id,
+                    "user_msg_id": message.message_id
+                }
+            }
         )
