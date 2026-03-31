@@ -1,4 +1,4 @@
 aiogram==3.4.1
-motor
-python-dotenv
-bson
+motor==3.3.2
+python-dotenv==1.0.0
+pydantic==2.5.3
