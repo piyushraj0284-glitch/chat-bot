@@ -1,16 +1,16 @@
 import os
 
+# fallback values (for Termux)
+DEFAULT_API_ID = 32316600
+DEFAULT_API_HASH = "dd2eb107af3f31e35cbfe02dca616d1a"
+
 def get_api_id(key):
     value = os.getenv(key)
-    if value is None:
-        return 32316600  # 👈 PUT YOUR REAL API ID HERE
-    return int(value)
+    return int(value) if value else DEFAULT_API_ID
 
 def get_api_hash(key):
     value = os.getenv(key)
-    if value is None:
-        return "dd2eb107af3f31e35cbfe02dca616d1a"  # 👈 PUT YOUR REAL HASH HERE
-    return value
+    return value if value else DEFAULT_API_HASH
 
 ACCOUNTS = [
     {"session": "acc1", "api_id": get_api_id("API_ID_1"), "api_hash": get_api_hash("API_HASH_1")},
@@ -21,8 +21,7 @@ ACCOUNTS = [
 ]
 
 GROUPS = [
-    -1001234567890,
-    -1009876543210,
+    -1001234567890,  # replace with real group IDs
 ]
 
 MIN_DELAY = 30
