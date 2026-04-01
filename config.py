@@ -21,7 +21,7 @@ ACCOUNTS = [
 ]
 
 GROUPS = [
-    -1001234567890,  # replace with real group IDs
+    -1003745853278,  # replace with real group IDs
 ]
 
 MIN_DELAY = 30
