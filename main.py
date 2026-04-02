@@ -33,7 +33,7 @@ MESSAGES = [
 AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
 GROUP_REPLY = "DM me on this bot to get instant reply @Con_tact_robot"
 
-DELAY = 5  # safe small delay
+DELAY = 15  # ✅ 15 seconds
 
 clients = []
 
@@ -54,7 +54,7 @@ def setup_auto_reply(client):
                 return
 
             await event.reply(AUTO_REPLY)
-            print(f"💬 DM replied")
+            print("💬 DM replied")
 
         except Exception as e:
             print(f"Reply error: {e}")
@@ -73,12 +73,11 @@ def setup_group_reply(client):
 
             replied_msg = await event.get_reply_message()
 
-            # only if user replied to YOUR message
             if replied_msg.out:
-                await asyncio.sleep(2)  # small delay (safe)
+                await asyncio.sleep(2)
                 await event.reply(GROUP_REPLY)
 
-                print(f"💬 Group reply sent")
+                print("💬 Group reply sent")
 
         except Exception as e:
             print(f"Group reply error: {e}")
@@ -115,8 +114,7 @@ async def handle_account(acc_name, client):
     except Exception as e:
         print(f"❌ {acc_name}: {e}")
 
-    await asyncio.sleep(DELAY)
-
+# ================= START =================
 
 async def start_clients():
     for acc in ACCOUNTS:
@@ -140,11 +138,12 @@ async def start_clients():
 async def main():
     await start_clients()
 
-    print("🔥 BOT RUNNING (ALL FEATURES ENABLED)")
+    print("🔥 BOT RUNNING (SEQUENTIAL MODE)")
 
     while True:
-        tasks = [handle_account(name, client) for name, client in clients]
-        await asyncio.gather(*tasks)
+        for acc_name, client in clients:
+            await handle_account(acc_name, client)
+            await asyncio.sleep(DELAY)  # ✅ delay after each account
 
 
 if __name__ == "__main__":
