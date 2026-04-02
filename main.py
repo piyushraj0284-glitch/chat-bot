@@ -3,7 +3,7 @@ import asyncio
 import random
 import schedule
 import time
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors import FloodWaitError
 
 # ================= CONFIG =================
@@ -25,30 +25,35 @@ ACCOUNTS = [
     {"session": "acc3", "api_id": get_api_id("API_ID_3"), "api_hash": get_api_hash("API_HASH_3")},
 ]
 
-MIN_DELAY = 30
-MAX_DELAY = 120
+MIN_DELAY = 10
+MAX_DELAY = 15
 
-MESSAGES = [
-    "Good morning 🌞",
-    "Hello 👋",
-    "Good night 🌙"
-]
+MESSAGE = "Hello 👋"
+REPLY_MESSAGE = "I have work for you"
+
+clients = []
+
+# ================= AUTO REPLY =================
+
+def setup_auto_reply(client):
+    @client.on(events.NewMessage(incoming=True))
+    async def handler(event):
+        try:
+            if event.is_private:
+                await event.reply(REPLY_MESSAGE)
+                print(f"💬 Auto-replied to {event.sender_id}")
+        except Exception as e:
+            print(f"Reply error: {e}")
 
 # ================= FUNCTIONS =================
 
-async def get_valid_chats(client):
+async def get_private_chats(client):
     chats = []
 
     async for dialog in client.iter_dialogs():
         try:
-            if dialog.is_channel:
-                continue
-
-            async for msg in client.iter_messages(dialog.entity, limit=5):
-                if msg.out:
-                    chats.append(dialog.entity)
-                    break
-
+            if dialog.is_user:
+                chats.append(dialog.entity)
         except Exception as e:
             print(f"Skip: {e}")
 
@@ -58,10 +63,8 @@ async def get_valid_chats(client):
 async def send_messages(client, chats):
     for chat in chats:
         try:
-            msg = random.choice(MESSAGES)
-            await client.send_message(chat, msg)
-
-            print(f"✅ Sent to {chat.id}: {msg}")
+            await client.send_message(chat, MESSAGE)
+            print(f"✅ Sent to {chat.id}")
 
             delay = random.randint(MIN_DELAY, MAX_DELAY)
             await asyncio.sleep(delay)
@@ -74,37 +77,45 @@ async def send_messages(client, chats):
             print(f"❌ Error: {e}")
 
 
-async def run_all_accounts():
+async def start_clients():
+    global clients
+
     for acc in ACCOUNTS:
         client = TelegramClient(acc["session"], acc["api_id"], acc["api_hash"])
-
         await client.start()
+
+        setup_auto_reply(client)
+
+        clients.append(client)
         print(f"🚀 Logged in: {acc['session']}")
 
-        chats = await get_valid_chats(client)
-        print(f"📊 {len(chats)} chats found")
+
+async def run_sending():
+    for client in clients:
+        chats = await get_private_chats(client)
+        print(f"📊 {len(chats)} private chats")
 
         await send_messages(client, chats)
 
-        await client.disconnect()
-
 
 def job():
-    asyncio.run(run_all_accounts())
+    asyncio.run(run_sending())
 
 
-# ================= SCHEDULER =================
+# ================= MAIN =================
 
-def main():
-    schedule.every().day.at("08:00").do(job)
-    schedule.every().day.at("22:00").do(job)
+async def main():
+    await start_clients()
 
-    print("⏳ Bot running...")
+    # ✅ Every 5 minutes
+    schedule.every(5).minutes.do(job)
+
+    print("⏳ Bot running every 5 minutes...")
 
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        await asyncio.sleep(1)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
