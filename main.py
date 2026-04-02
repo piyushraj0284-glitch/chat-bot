@@ -25,11 +25,10 @@ ACCOUNTS = [
     {"session": "acc5", "api_id": get_api_id("API_ID_5"), "api_hash": get_api_hash("API_HASH_5")},
 ]
 
-# ✅ Your message variations
+# ✅ Message variations
 MESSAGES = [
     "Refer to refer dm me on my bio bot link. I have 4 account",
     "Dm me on my bio chat bot. You will get link in my bio",
-    "Refer to refer dm me on my bio bot link. I have 4 account",
     "There is bot where you have to do 3 refers then you will get Netflix premium account. DM to get link 🔗",
     "Username to number chahiye to dm karo. Unlimited search 🔍",
 ]
@@ -41,27 +40,23 @@ clients = []
 
 # ================= FUNCTIONS =================
 
-async def get_first_3_groups(client):
-    groups = []
-
+# ✅ ONLY FIRST GROUP
+async def get_first_group(client):
     async for dialog in client.iter_dialogs():
         try:
             if dialog.is_group:
-                groups.append(dialog.entity)
-
-            if len(groups) >= 3:
-                break
+                return [dialog.entity]  # return single group
 
         except Exception as e:
             print(f"Skip: {e}")
 
-    return groups
+    return []
 
 
 async def send_messages(client, groups):
     for group in groups:
         try:
-            msg = random.choice(MESSAGES)  # ✅ random message
+            msg = random.choice(MESSAGES)
             await client.send_message(group, msg)
 
             print(f"✅ Sent to {group.id}: {msg}")
@@ -90,8 +85,8 @@ async def start_clients():
 
 async def run_sending():
     for client in clients:
-        groups = await get_first_3_groups(client)
-        print(f"📊 Using {len(groups)} groups")
+        groups = await get_first_group(client)
+        print(f"📊 Using {len(groups)} group")
 
         await send_messages(client, groups)
 
