@@ -1,7 +1,6 @@
 import os
 import asyncio
 import random
-import time
 from telethon import TelegramClient, events
 from telethon.errors import FloodWaitError, UserBannedInChannelError
 
@@ -25,18 +24,20 @@ ACCOUNTS = [
 ]
 
 MESSAGES = [
-    "Hello 👋",
-    "Hi 🙂",
-    "Hey there!",
+    "Refer to refer, DM me from my bio bot link. I have 4 accounts.",
+    "Username to number chahiye? DM karo, unlimited search available.",
+    "Refer chahiye? DM me, I have 6 accounts ready.",
+    "Refer to refer, jaldi aao! 6 accounts available 🔥"
 ]
 
-AUTO_REPLY = "Reply received 👍"
+AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
+GROUP_REPLY = "DM me on this bot to get instant reply @Con_tact_robot"
 
-DELAY = 5  # ⚡ fast but not zero (important)
+DELAY = 5  # safe small delay
 
 clients = []
 
-# ================= AUTO REPLY =================
+# ================= AUTO DM REPLY =================
 
 def setup_auto_reply(client):
     @client.on(events.NewMessage(incoming=True))
@@ -53,9 +54,34 @@ def setup_auto_reply(client):
                 return
 
             await event.reply(AUTO_REPLY)
+            print(f"💬 DM replied")
 
         except Exception as e:
             print(f"Reply error: {e}")
+
+# ================= GROUP REPLY =================
+
+def setup_group_reply(client):
+    @client.on(events.NewMessage(incoming=True))
+    async def handler(event):
+        try:
+            if not event.is_group:
+                return
+
+            if not event.is_reply:
+                return
+
+            replied_msg = await event.get_reply_message()
+
+            # only if user replied to YOUR message
+            if replied_msg.out:
+                await asyncio.sleep(2)  # small delay (safe)
+                await event.reply(GROUP_REPLY)
+
+                print(f"💬 Group reply sent")
+
+        except Exception as e:
+            print(f"Group reply error: {e}")
 
 # ================= FUNCTIONS =================
 
@@ -84,7 +110,7 @@ async def handle_account(acc_name, client):
         await asyncio.sleep(e.seconds)
 
     except UserBannedInChannelError:
-        print(f"🚫 {acc_name}: banned in group")
+        print(f"🚫 {acc_name}: banned")
 
     except Exception as e:
         print(f"❌ {acc_name}: {e}")
@@ -99,6 +125,7 @@ async def start_clients():
             await client.start()
 
             setup_auto_reply(client)
+            setup_group_reply(client)
 
             me = await client.get_me()
             print(f"🚀 {acc['session']} → {me.first_name}")
@@ -108,13 +135,12 @@ async def start_clients():
         except Exception as e:
             print(f"❌ {acc['session']} failed: {e}")
 
-
 # ================= MAIN =================
 
 async def main():
     await start_clients()
 
-    print("🔥 FAST SAFE SYSTEM RUNNING")
+    print("🔥 BOT RUNNING (ALL FEATURES ENABLED)")
 
     while True:
         tasks = [handle_account(name, client) for name, client in clients]
