@@ -34,7 +34,7 @@ MESSAGES = [
 
 AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
 
-DELAY_BETWEEN_MSG = 15
+DELAY_BETWEEN_MSG = 30   # ✅ 30 seconds
 BLOCK_TIME = 25 * 60 * 60
 
 clients = []
