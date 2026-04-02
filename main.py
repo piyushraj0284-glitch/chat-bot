@@ -27,7 +27,7 @@ ACCOUNTS = [
 
 MESSAGES = [
     "Refer to refer dm me on my bio bot link. I have 4 account",
-    "Dm me on my bio chat bot.for refer to refer You will get link in my bio",
+    "Dm me on my bio chat bot. You will get link in my bio",
     "There is bot where you have to do 3 refers then you will get Netflix premium account. DM to get link 🔗",
     "Username to number chahiye to dm karo. Unlimited search 🔍",
 ]
@@ -39,7 +39,6 @@ BLOCK_TIME = 25 * 60 * 60
 
 clients = []
 blocked_accounts = {}
-replied_users = set()
 
 # ================= AUTO REPLY =================
 
@@ -48,13 +47,8 @@ def setup_auto_reply(client):
     async def handler(event):
         try:
             if event.is_private:
-                user_id = event.sender_id
-
-                if user_id not in replied_users:
-                    await event.reply(AUTO_REPLY)
-                    replied_users.add(user_id)
-
-                    print(f"💬 Replied once to {user_id}")
+                await event.reply(AUTO_REPLY)
+                print(f"💬 Replied to {event.sender_id}")
 
         except Exception as e:
             print(f"Reply error: {e}")
@@ -109,6 +103,7 @@ async def start_clients():
 async def run_sending():
     for acc_name, client in clients:
 
+        # ⛔ check if blocked
         if acc_name in blocked_accounts:
             elapsed = time.time() - blocked_accounts[acc_name]
 
@@ -133,7 +128,7 @@ async def main():
     print("🔥 Running continuously (cycle-based)...")
 
     while True:
-        await run_sending()   # ✅ next cycle starts after completion
+        await run_sending()
 
 
 if __name__ == "__main__":
