@@ -27,15 +27,14 @@ ACCOUNTS = [
 
 MESSAGES = [
     "Refer to refer dm me on my bio bot link. I have 4 account",
-    "Dm me on my bio chat bot. You will get link in my bio",
+    "Dm me on my bio chat bot.for refer to refer You will get link in my bio",
     "There is bot where you have to do 3 refers then you will get Netflix premium account. DM to get link 🔗",
     "Username to number chahiye to dm karo. Unlimited search 🔍",
 ]
 
 AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
 
-DELAY_BETWEEN_MSG = 15            # ✅ 15 sec
-LOOP_DELAY = 1800                 # ✅ 30 minutes
+DELAY_BETWEEN_MSG = 15
 BLOCK_TIME = 25 * 60 * 60
 
 clients = []
@@ -131,14 +130,10 @@ async def run_sending():
 async def main():
     await start_clients()
 
-    print("🔥 Running immediately...")
-    await run_sending()
-
-    print("⏳ Running every 30 minutes...")
+    print("🔥 Running continuously (cycle-based)...")
 
     while True:
-        await asyncio.sleep(LOOP_DELAY)
-        await run_sending()
+        await run_sending()   # ✅ next cycle starts after completion
 
 
 if __name__ == "__main__":
