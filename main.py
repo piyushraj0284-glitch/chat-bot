@@ -1,86 +1,110 @@
+import os
 import asyncio
 import random
-import logging
-from telethon import TelegramClient, events
-from config import ACCOUNTS, GROUPS, MIN_DELAY, MAX_DELAY
+import schedule
+import time
+from telethon import TelegramClient
+from telethon.errors import FloodWaitError
 
-logging.basicConfig(level=logging.INFO)
+# ================= CONFIG =================
 
-clients = []
+DEFAULT_API_ID = 32316600
+DEFAULT_API_HASH = "dd2eb107af3f31e35cbfe02dca616d1a"
 
-# -------- START CLIENTS --------
-async def start_clients():
-    for acc in ACCOUNTS:
+def get_api_id(key):
+    value = os.getenv(key)
+    return int(value) if value else DEFAULT_API_ID
+
+def get_api_hash(key):
+    value = os.getenv(key)
+    return value if value else DEFAULT_API_HASH
+
+ACCOUNTS = [
+    {"session": "acc1", "api_id": get_api_id("API_ID_1"), "api_hash": get_api_hash("API_HASH_1")},
+    {"session": "acc2", "api_id": get_api_id("API_ID_2"), "api_hash": get_api_hash("API_HASH_2")},
+    {"session": "acc3", "api_id": get_api_id("API_ID_3"), "api_hash": get_api_hash("API_HASH_3")},
+]
+
+MIN_DELAY = 30
+MAX_DELAY = 120
+
+MESSAGES = [
+    "Good morning 🌞",
+    "Hello 👋",
+    "Good night 🌙"
+]
+
+# ================= FUNCTIONS =================
+
+async def get_valid_chats(client):
+    chats = []
+
+    async for dialog in client.iter_dialogs():
         try:
-            client = TelegramClient(acc["session"], acc["api_id"], acc["api_hash"])
-            await client.start()
-            clients.append(client)
-            logging.info(f"✅ Started {acc['session']}")
+            if dialog.is_channel:
+                continue
+
+            async for msg in client.iter_messages(dialog.entity, limit=5):
+                if msg.out:
+                    chats.append(dialog.entity)
+                    break
+
         except Exception as e:
-            logging.error(f"❌ Failed {acc['session']} -> {e}")
+            print(f"Skip: {e}")
 
-# -------- MESSAGE VARIATION --------
-def generate_message(base):
-    styles = [
-        "🔥 Check this out:",
-        "Hey guys 👀",
-        "Don’t miss this 👇",
-        "Something useful:",
-        "Worth checking:"
-    ]
-    return f"{random.choice(styles)}\n{base}"
+    return chats
 
-# -------- SEND PROMO --------
-async def send_promo(text):
-    tasks = []
 
-    selected_clients = random.sample(clients, min(len(clients), 3))
+async def send_messages(client, chats):
+    for chat in chats:
+        try:
+            msg = random.choice(MESSAGES)
+            await client.send_message(chat, msg)
 
-    for client in selected_clients:
-        for group in GROUPS:
+            print(f"✅ Sent to {chat.id}: {msg}")
+
             delay = random.randint(MIN_DELAY, MAX_DELAY)
-            msg = generate_message(text)
+            await asyncio.sleep(delay)
 
-            async def task(c=client, g=group, m=msg, d=delay):
-                await asyncio.sleep(d)
-                try:
-                    await c.send_message(g, m)
-                    logging.info(f"📤 Sent to {g}")
-                except Exception as e:
-                    logging.error(f"❌ Error: {e}")
+        except FloodWaitError as e:
+            print(f"⏳ Flood wait {e.seconds}s")
+            await asyncio.sleep(e.seconds)
 
-            tasks.append(task())
+        except Exception as e:
+            print(f"❌ Error: {e}")
 
-    await asyncio.gather(*tasks)
 
-# -------- COMMAND HANDLER --------
-async def setup_controller():
-    controller = clients[0]
+async def run_all_accounts():
+    for acc in ACCOUNTS:
+        client = TelegramClient(acc["session"], acc["api_id"], acc["api_hash"])
 
-    @controller.on(events.NewMessage(pattern="/promo"))
-    async def handler(event):
-        if not event.is_private:
-            return
+        await client.start()
+        print(f"🚀 Logged in: {acc['session']}")
 
-        msg = event.raw_text.replace("/promo", "").strip()
+        chats = await get_valid_chats(client)
+        print(f"📊 {len(chats)} chats found")
 
-        if not msg:
-            await event.reply("❌ Use:\n/promo your message")
-            return
+        await send_messages(client, chats)
 
-        await event.reply("🚀 Sending...")
-        await send_promo(msg)
-        await event.reply("✅ Done")
+        await client.disconnect()
 
-    logging.info("🎮 Controller ready")
 
-# -------- MAIN --------
-async def main():
-    await start_clients()
-    await setup_controller()
+def job():
+    asyncio.run(run_all_accounts())
 
-    logging.info("🔥 Bot running...")
-    await asyncio.Event().wait()
+
+# ================= SCHEDULER =================
+
+def main():
+    schedule.every().day.at("08:00").do(job)
+    schedule.every().day.at("22:00").do(job)
+
+    print("⏳ Bot running...")
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
