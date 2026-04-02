@@ -2,7 +2,7 @@ import os
 import asyncio
 import random
 import time
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors import FloodWaitError
 
 # ================= CONFIG =================
@@ -18,7 +18,6 @@ def get_api_hash(key):
     value = os.getenv(key)
     return value if value else DEFAULT_API_HASH
 
-# ❌ Removed acc1
 ACCOUNTS = [
     {"session": "acc2", "api_id": get_api_id("API_ID_2"), "api_hash": get_api_hash("API_HASH_2")},
     {"session": "acc3", "api_id": get_api_id("API_ID_3"), "api_hash": get_api_hash("API_HASH_3")},
@@ -33,12 +32,33 @@ MESSAGES = [
     "Username to number chahiye to dm karo. Unlimited search 🔍",
 ]
 
-DELAY_BETWEEN_MSG = 60         # ✅ 1 minute
-LOOP_DELAY = 120               # 2 minutes
-BLOCK_TIME = 25 * 60 * 60      # 25 hours
+AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
+
+DELAY_BETWEEN_MSG = 15            # ✅ 15 sec
+LOOP_DELAY = 1800                 # ✅ 30 minutes
+BLOCK_TIME = 25 * 60 * 60
 
 clients = []
-blocked_accounts = {}  # track blocked accounts
+blocked_accounts = {}
+replied_users = set()
+
+# ================= AUTO REPLY =================
+
+def setup_auto_reply(client):
+    @client.on(events.NewMessage(incoming=True))
+    async def handler(event):
+        try:
+            if event.is_private:
+                user_id = event.sender_id
+
+                if user_id not in replied_users:
+                    await event.reply(AUTO_REPLY)
+                    replied_users.add(user_id)
+
+                    print(f"💬 Replied once to {user_id}")
+
+        except Exception as e:
+            print(f"Reply error: {e}")
 
 # ================= FUNCTIONS =================
 
@@ -68,8 +88,6 @@ async def send_messages(client, groups, acc_name):
 
         except Exception as e:
             print(f"❌ [{acc_name}] Error → blocking for 25h: {e}")
-
-            # ⛔ block account
             blocked_accounts[acc_name] = time.time()
             return
 
@@ -79,6 +97,8 @@ async def start_clients():
         try:
             client = TelegramClient(acc["session"], acc["api_id"], acc["api_hash"])
             await client.start()
+
+            setup_auto_reply(client)
 
             clients.append((acc["session"], client))
             print(f"🚀 Logged in: {acc['session']}")
@@ -90,7 +110,6 @@ async def start_clients():
 async def run_sending():
     for acc_name, client in clients:
 
-        # ⛔ Check block status
         if acc_name in blocked_accounts:
             elapsed = time.time() - blocked_accounts[acc_name]
 
@@ -115,7 +134,7 @@ async def main():
     print("🔥 Running immediately...")
     await run_sending()
 
-    print("⏳ Running every 2 minutes...")
+    print("⏳ Running every 30 minutes...")
 
     while True:
         await asyncio.sleep(LOOP_DELAY)
