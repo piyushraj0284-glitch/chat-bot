@@ -1,6 +1,7 @@
 import os
 import asyncio
 import random
+import time
 from telethon import TelegramClient
 from telethon.errors import FloodWaitError
 
@@ -17,15 +18,14 @@ def get_api_hash(key):
     value = os.getenv(key)
     return value if value else DEFAULT_API_HASH
 
+# ❌ Removed acc1
 ACCOUNTS = [
-    {"session": "acc1", "api_id": get_api_id("API_ID_1"), "api_hash": get_api_hash("API_HASH_1")},
     {"session": "acc2", "api_id": get_api_id("API_ID_2"), "api_hash": get_api_hash("API_HASH_2")},
     {"session": "acc3", "api_id": get_api_id("API_ID_3"), "api_hash": get_api_hash("API_HASH_3")},
     {"session": "acc4", "api_id": get_api_id("API_ID_4"), "api_hash": get_api_hash("API_HASH_4")},
     {"session": "acc5", "api_id": get_api_id("API_ID_5"), "api_hash": get_api_hash("API_HASH_5")},
 ]
 
-# ✅ Message variations
 MESSAGES = [
     "Refer to refer dm me on my bio bot link. I have 4 account",
     "Dm me on my bio chat bot. You will get link in my bio",
@@ -33,42 +33,45 @@ MESSAGES = [
     "Username to number chahiye to dm karo. Unlimited search 🔍",
 ]
 
-DELAY_BETWEEN_MSG = 30
-LOOP_DELAY = 120
+DELAY_BETWEEN_MSG = 60         # ✅ 1 minute
+LOOP_DELAY = 120               # 2 minutes
+BLOCK_TIME = 25 * 60 * 60      # 25 hours
 
 clients = []
+blocked_accounts = {}  # track blocked accounts
 
 # ================= FUNCTIONS =================
 
-# ✅ ONLY FIRST GROUP
 async def get_first_group(client):
     async for dialog in client.iter_dialogs():
         try:
             if dialog.is_group:
-                return [dialog.entity]  # return single group
-
+                return [dialog.entity]
         except Exception as e:
             print(f"Skip: {e}")
-
     return []
 
 
-async def send_messages(client, groups):
+async def send_messages(client, groups, acc_name):
     for group in groups:
         try:
             msg = random.choice(MESSAGES)
             await client.send_message(group, msg)
 
-            print(f"✅ Sent to {group.id}: {msg}")
+            print(f"✅ [{acc_name}] Sent to {group.id}")
 
             await asyncio.sleep(DELAY_BETWEEN_MSG)
 
         except FloodWaitError as e:
-            print(f"⏳ Flood wait {e.seconds}s")
+            print(f"⏳ [{acc_name}] Flood wait {e.seconds}s")
             await asyncio.sleep(e.seconds)
 
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ [{acc_name}] Error → blocking for 25h: {e}")
+
+            # ⛔ block account
+            blocked_accounts[acc_name] = time.time()
+            return
 
 
 async def start_clients():
@@ -77,18 +80,31 @@ async def start_clients():
             client = TelegramClient(acc["session"], acc["api_id"], acc["api_hash"])
             await client.start()
 
-            clients.append(client)
+            clients.append((acc["session"], client))
             print(f"🚀 Logged in: {acc['session']}")
+
         except Exception as e:
             print(f"❌ Failed: {acc['session']} → {e}")
 
 
 async def run_sending():
-    for client in clients:
-        groups = await get_first_group(client)
-        print(f"📊 Using {len(groups)} group")
+    for acc_name, client in clients:
 
-        await send_messages(client, groups)
+        # ⛔ Check block status
+        if acc_name in blocked_accounts:
+            elapsed = time.time() - blocked_accounts[acc_name]
+
+            if elapsed < BLOCK_TIME:
+                print(f"⛔ Skipping {acc_name} (blocked)")
+                continue
+            else:
+                print(f"✅ Unblocking {acc_name}")
+                del blocked_accounts[acc_name]
+
+        groups = await get_first_group(client)
+        print(f"📊 [{acc_name}] Using {len(groups)} group")
+
+        await send_messages(client, groups, acc_name)
 
 
 # ================= MAIN =================
