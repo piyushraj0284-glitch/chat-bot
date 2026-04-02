@@ -1,6 +1,7 @@
 import os
 import asyncio
-from telethon import TelegramClient, events
+import random
+from telethon import TelegramClient
 from telethon.errors import FloodWaitError
 
 # ================= CONFIG =================
@@ -24,44 +25,46 @@ ACCOUNTS = [
     {"session": "acc5", "api_id": get_api_id("API_ID_5"), "api_hash": get_api_hash("API_HASH_5")},
 ]
 
-MESSAGE = "Hello 👋"
-REPLY_MESSAGE = "I have work for you"
+# ✅ Your message variations
+MESSAGES = [
+    "Refer to refer dm me on my bio bot link. I have 4 account",
+    "Dm me on my bio chat bot. You will get link in my bio",
+    "Refer to refer dm me on my bio bot link. I have 4 account",
+    "There is bot where you have to do 3 refers then you will get Netflix premium account. DM to get link 🔗",
+    "Username to number chahiye to dm karo. Unlimited search 🔍",
+]
 
-DELAY_BETWEEN_MSG = 30   # 30 seconds
-LOOP_DELAY = 300         # 5 minutes
+DELAY_BETWEEN_MSG = 30
+LOOP_DELAY = 120
 
 clients = []
 
-# ================= AUTO REPLY =================
-
-def setup_auto_reply(client):
-    @client.on(events.NewMessage(incoming=True))
-    async def handler(event):
-        try:
-            if event.is_private:
-                await event.reply(REPLY_MESSAGE)
-                print(f"💬 Replied to {event.sender_id}")
-        except Exception as e:
-            print(f"Reply error: {e}")
-
 # ================= FUNCTIONS =================
 
-async def get_private_chats(client):
-    chats = []
+async def get_first_3_groups(client):
+    groups = []
+
     async for dialog in client.iter_dialogs():
         try:
-            if dialog.is_user:
-                chats.append(dialog.entity)
+            if dialog.is_group:
+                groups.append(dialog.entity)
+
+            if len(groups) >= 3:
+                break
+
         except Exception as e:
             print(f"Skip: {e}")
-    return chats
+
+    return groups
 
 
-async def send_messages(client, chats):
-    for chat in chats:
+async def send_messages(client, groups):
+    for group in groups:
         try:
-            await client.send_message(chat, MESSAGE)
-            print(f"✅ Sent to {chat.id}")
+            msg = random.choice(MESSAGES)  # ✅ random message
+            await client.send_message(group, msg)
+
+            print(f"✅ Sent to {group.id}: {msg}")
 
             await asyncio.sleep(DELAY_BETWEEN_MSG)
 
@@ -79,8 +82,6 @@ async def start_clients():
             client = TelegramClient(acc["session"], acc["api_id"], acc["api_hash"])
             await client.start()
 
-            setup_auto_reply(client)
-
             clients.append(client)
             print(f"🚀 Logged in: {acc['session']}")
         except Exception as e:
@@ -89,24 +90,22 @@ async def start_clients():
 
 async def run_sending():
     for client in clients:
-        chats = await get_private_chats(client)
-        print(f"📊 {len(chats)} chats found")
+        groups = await get_first_3_groups(client)
+        print(f"📊 Using {len(groups)} groups")
 
-        await send_messages(client, chats)
+        await send_messages(client, groups)
 
-# ================= MAIN LOOP =================
+
+# ================= MAIN =================
 
 async def main():
     await start_clients()
 
     print("🔥 Running immediately...")
-
-    # ✅ Run immediately first
     await run_sending()
 
-    print("⏳ Now running every 5 minutes...")
+    print("⏳ Running every 2 minutes...")
 
-    # 🔁 Loop every 5 minutes
     while True:
         await asyncio.sleep(LOOP_DELAY)
         await run_sending()
