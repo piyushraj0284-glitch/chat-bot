@@ -21,19 +21,25 @@ ACCOUNTS = [
     {"session": "acc3", "api_id": get_api_id("API_ID_3"), "api_hash": get_api_hash("API_HASH_3")},
     {"session": "acc4", "api_id": get_api_id("API_ID_4"), "api_hash": get_api_hash("API_HASH_4")},
     {"session": "acc5", "api_id": get_api_id("API_ID_5"), "api_hash": get_api_hash("API_HASH_5")},
+    {"session": "acc6", "api_id": get_api_id("API_ID_6"), "api_hash": get_api_hash("API_HASH_6")},
+    {"session": "acc7", "api_id": get_api_id("API_ID_7"), "api_hash": get_api_hash("API_HASH_7")},
+    {"session": "acc8", "api_id": get_api_id("API_ID_8"), "api_hash": get_api_hash("API_HASH_8")},
 ]
 
+# ✅ New 6 variations
 MESSAGES = [
-    "NETFLIX  PREMIUM ACCOUNT BUY KARNA HAI TO DDMM KARO FAST 🔥.",
-    "Username to number chahiye? DM karo, unlimited search available.",
-    "NETFLIX ACCOUNT BUY KARNA HAI TO DM KARO🔥 AT JUST 30RS .",
-    "NETFLIX ACCOUNT BUY KARNA HAI TO DDMM KARO🔥"
+    "Do 1 task and get free Netflix premium account 🎬",
+    "Complete 1 task and get Netflix premium for free 🔥",
+    "Just 1 task = free Netflix premium account 🎁",
+    "Do one simple task and enjoy Netflix premium free 😍",
+    "1 task karo aur free Netflix premium pao 🚀",
+    "Easy task complete karo aur Netflix premium free lo 🎬"
 ]
 
 AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
 GROUP_REPLY = "DM me on this bot to get instant reply @Con_tact_robot"
 
-DELAY = 15  # ✅ 15 seconds
+DELAY = 15
 
 clients = []
 
@@ -143,7 +149,7 @@ async def main():
     while True:
         for acc_name, client in clients:
             await handle_account(acc_name, client)
-            await asyncio.sleep(DELAY)  # ✅ delay after each account
+            await asyncio.sleep(DELAY)
 
 
 if __name__ == "__main__":
