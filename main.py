@@ -24,7 +24,7 @@ ACCOUNTS = [
 ]
 
 MESSAGES = [
-    "Refer to refer, DM me from my bio bot link. I have 4 accounts.",
+    "NETFLIX  PREMIUM ACCOUNT BUY KARNA HAI TO DDMM KARO FAST 🔥.",
     "Username to number chahiye? DM karo, unlimited search available.",
     "NETFLIX ACCOUNT BUY KARNA HAI TO DM KARO🔥 AT JUST 30RS .",
     "NETFLIX ACCOUNT BUY KARNA HAI TO DDMM KARO🔥"
