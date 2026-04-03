@@ -26,8 +26,8 @@ ACCOUNTS = [
 MESSAGES = [
     "Refer to refer, DM me from my bio bot link. I have 4 accounts.",
     "Username to number chahiye? DM karo, unlimited search available.",
-    "Refer chahiye? DM me, I have 6 accounts ready.",
-    "Refer to refer, jaldi aao! 6 accounts available 🔥"
+    "NETFLIX ACCOUNT BUY KARNA HAI TO DM KARO🔥 AT JUST 30RS .",
+    "NETFLIX ACCOUNT BUY KARNA HAI TO DDMM KARO🔥"
 ]
 
 AUTO_REPLY = "dm me on this bot to get instant reply @Con_tact_robot"
