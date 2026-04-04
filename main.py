@@ -28,11 +28,11 @@ ACCOUNTS = [
 
 # ✅ New 6 variations
 MESSAGES = [
-    "Do 1 task and get free Netflix premium account 🎬",
-    "Complete 1 task and get Netflix premium for free 🔥",
-    "Just 1 task = free Netflix premium account 🎁",
-    "Do one simple task and enjoy Netflix premium free 😍",
-    "1 task karo aur free Netflix premium pao 🚀",
+    "Refer ka refer chahiye — jaldi DM karo, mere paas 8 accounts ready hain.",
+    "Refer to refer — jaldi DM karo, mere paas 8 accounts hain. Fast!",
+    "Refer ke liye refer — jaldi message karo, mere paas 8 IDs hain. Hurry!",
+    "Refer ke liye contact karo — jaldi DM karo, mere paas 8 accounts ready hain.",
+    "refer to refer jaldi dm karo . mere pass 8 account hai ",
     "Easy task complete karo aur Netflix premium free lo 🎬"
 ]
 
