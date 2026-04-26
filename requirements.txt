@@ -1,2 +1,6 @@
-telethon
-schedule
+python-telegram-bot
+pyotp
+pymongo
+pillow
+pyzbar
+python-dotenv
